@@ -1,0 +1,46 @@
+---
+#
+# WSJT-X FT8 Automation with Unsolicited Calling
+# This configuration enables calling stations heard in other QSOs
+#
+
+ft8ctrl:
+  my_call: -- YOUR_CALLSIGN_HERE --
+  my_grid: -- YOUR_GRID_HERE --
+  db_name: ~/ft8ctl.sql
+  wsjt_ip: 127.0.0.1
+  wsjt_port: 2238
+  follow_frequency: False
+  retry_time: 15                 # In minutes
+  tx_power: 30
+  tx_retries: 5
+  # Enable unsolicited calling - call stations heard in other QSOs
+  enable_unsolicited: True
+  # Use multiple selectors for different strategies
+  call_selector:
+    - Unsolicited  # Prioritize unsolicited opportunities
+    - Any          # Fall back to any station not worked
+
+# Optional: Add any stations you want to avoid
+BlackList:
+  # - KC5TT
+  # - KD7DPS
+  # - VA7QI
+
+#
+# Unsolicited selector configuration - prioritizes stations heard in other QSOs
+#
+Unsolicited:
+  min_snr: -20                   # Lower SNR threshold for unsolicited calls
+  max_snr: 5                     # Higher SNR threshold for unsolicited calls
+  lotw_users_only: False         # Set to True if you only want LOTW users
+  # delta: 29                    # How many seconds back to look for calls (default: 29)
+
+#
+# Any selector configuration - fallback for any station not in your log
+#
+Any:
+  min_snr: -18                   # Minimum signal strength to respond to
+  max_snr: 3                     # Maximum signal strength to respond to
+  lotw_users_only: False         # Set to True if you only want LOTW users
+  # delta: 29                    # How many seconds back to look for CQ calls (default: 29) 
