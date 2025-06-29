@@ -1,4 +1,3 @@
-
 # FT8Commander
 
 > This is an experimental piece of code. Don't forget to run `git pull` often.
@@ -14,11 +13,20 @@ information such as the SNR[^1] and the distance of the calling
 stations to calculate which one has the most chances of completing the
 QSO.
 
+## Configuration Files
+
+The project includes two sample configuration files:
+
+- **`ft8ctrl.yaml.sample`** - Standard configuration for normal FT8 operation
+- **`ft8ctrl_unsolicited.yaml.sample`** - Configuration with unsolicited calling enabled (calls stations heard in other QSOs)
+
 ## Usage:
   1. Install the **DXEntity** package `pip install DXEntity`
   2. Start WSJT-X
   3. In a terminal or powershell Go to the directory FT8Commander
-  4. Copy the `ft8ctrl.yaml.sample` into `ft8ctrl.yaml`
+  4. Choose and copy one of the sample configuration files:
+     - For standard operation: `cp ft8ctrl.yaml.sample ft8ctrl.yaml`
+     - For unsolicited calling: `cp ft8ctrl_unsolicited.yaml.sample ft8ctrl.yaml`
   5. Edit the configuration file and enter your information
   6. Start the Python program:
    - On Linux or MacOS type `./ft8ctrl.py`
