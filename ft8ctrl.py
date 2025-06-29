@@ -30,9 +30,10 @@ SEQUENCE_TIME = {
 
 PARSERS = {
   'REPLY': re.compile(r'^((?!CQ)(?P<to>\w+)(|/\w+)) (?P<call>\w+)(|/\w+) .*'),
-  'CQ': re.compile(r'''^CQ\s(?:CQ\s|(?P<extra>[\S.]+)\s|)
-                   (?P<call>\w+(|/\w+))\s
-                   (?P<grid>[A-Z]{2}[0-9]{2})''', re.VERBOSE),
+  'CQ': re.compile(r'''^CQ\s
+                       (?:(?P<extra>[\S.]+)\s)?
+                       (?P<call>\w+(?:/\w+)?)\s
+                       (?P<grid>[A-Z]{2}[0-9]{2})''', re.VERBOSE),
   'BROKENCQ': re.compile(r'^CQ\s(?P<call>\w+(|/\w+))$'),
   'UNSOLICITED': re.compile(r'^(?P<call>\w+(|/\w+))\s+(?P<to>\w+(|/\w+))\s+(?P<grid>[A-Z]{2}[0-9]{2})'),
 }
