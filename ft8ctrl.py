@@ -78,8 +78,8 @@ class Sequencer:
     packet.DeltaFrequency = pkt['DeltaFrequency']
     packet.Mode = pkt['Mode']
     packet.Message = pkt['Message']
-    if self.follow_frequency:
-      packet.Modifiers = wsjtx.Modifiers.SHIFT
+    # always queue transmit for unsolicited opportunities
+    packet.Modifiers = wsjtx.Modifiers.SHIFT
 
     LOG.debug('Transmitting %s', packet)
     try:
