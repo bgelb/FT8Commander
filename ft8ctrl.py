@@ -29,11 +29,13 @@ SEQUENCE_TIME = {
 }
 
 PARSERS = {
-  'REPLY': re.compile(r'^((?!CQ)(?P<to>\w+)(|/\w+)) (?P<call>\w+)(|/\w+) .*'),
-  'CQ': re.compile(r'''^CQ\s(?:CQ\s|(?P<extra>[\S.]+)\s|)
-                   (?P<call>\w+(|/\w+))\s
-                   (?P<grid>[A-Z]{2}[0-9]{2})''', re.VERBOSE),
+  'CQ': re.compile(r'''^CQ\s
+                       (?:(?P<extra>[\S.]+)\s)?
+                       (?P<call>\w+(?:/\w+)?)\s
+                       (?P<grid>[A-Z]{2}[0-9]{2})''', re.VERBOSE),
   'BROKENCQ': re.compile(r'^CQ\s(?P<call>\w+(|/\w+))$'),
+  'UNSOLICITED': re.compile(r'^(?P<call>\w+(|/\w+))\s+(?P<to>\w+(|/\w+))\s+(?P<grid>[A-Z]{2}[0-9]{2})'),
+  'REPLY': re.compile(r'^((?!CQ)(?P<to>\w+)(|/\w+)) (?P<call>\w+)(|/\w+) .*'),
 }
 
 LOGFILE_SIZE = 2 << 20
@@ -50,6 +52,7 @@ class Sequencer:
     self.follow_frequency = config.follow_frequency
     self.tx_power = getattr(config, 'tx_power')
     self.tx_retries = getattr(config, 'tx_retries', 5)
+    self.enable_unsolicited = getattr(config, 'enable_unsolicited', True)
 
     bind_addr = socket.gethostbyname(config.wsjt_ip)
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -111,6 +114,12 @@ class Sequencer:
         data['extra'] = data['grid'] = None
       elif name == 'CQ':
         LOG.debug("%s = %r, %s", name, data, message)
+      elif name == 'UNSOLICITED':
+        if data.get('to') and data['to'] != self.mycall:
+          data['call'], data['to'] = data['to'], data['call']
+          LOG.debug("Unsolicited call opportunity: %s calling %s", data['to'], data['call'])
+        else:
+          continue
       return (name, data)
     LOG.debug('Unmatched: %s', message)
     return (None, None)
@@ -165,6 +174,13 @@ class Sequencer:
               match['band'] = get_band(frequency)
               match['packet'] = packet.as_dict()
               self.queue.put((DBCommand.INSERT, match))
+            elif name == 'UNSOLICITED' and self.enable_unsolicited:
+              match['frequency'] = frequency
+              match['band'] = get_band(frequency)
+              match['packet'] = packet.as_dict()
+              match['extra'] = 'UNSOLICITED'
+              self.queue.put((DBCommand.INSERT, match))
+              LOG.debug("Added unsolicited call opportunity: %s", match['call'])
             continue
           case wsjtx.WSStatus():
             # WSJT-X will sometimes send multiple status packets where Transmitting is

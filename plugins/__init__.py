@@ -10,4 +10,5 @@ from .callsign import CallSign
 from .continent import Continent, Country
 from .grid import Grid
 from .special import DXCC100, Extra
+from .unsolicited import Unsolicited
 from .zones import CQZone, ITUZone
