@@ -11,6 +11,7 @@ import os
 import re
 import select
 import socket
+import struct
 import time
 from argparse import ArgumentParser
 from datetime import datetime
@@ -54,11 +55,31 @@ class Sequencer:
     self.tx_retries = getattr(config, 'tx_retries', 5)
     self.enable_unsolicited = getattr(config, 'enable_unsolicited', True)
 
-    bind_addr = socket.gethostbyname(config.wsjt_ip)
+    # Determine bind address; handle multicast groups specially
+    raw_ip = config.wsjt_ip
+    try:
+      first_octet = int(raw_ip.split('.')[0])
+    except (ValueError, IndexError):
+      first_octet = None
+    if first_octet is not None and 224 <= first_octet <= 239:
+      bind_addr = '0.0.0.0'
+    else:
+      bind_addr = socket.gethostbyname(raw_ip)
+    # Create and configure socket
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    self.sock.setblocking(False)  # Set socket to non-blocking mode
+    # Allow reuse port on platforms that support it
+    try:
+      self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    except (AttributeError, OSError):
+      pass
+    self.sock.setblocking(False)
     self.sock.bind((bind_addr, config.wsjt_port))
+    # If binding to multicast group, join it
+    if first_octet is not None and 224 <= first_octet <= 239:
+      mreq = struct.pack('4s4s', socket.inet_aton(raw_ip), socket.inet_aton(bind_addr))
+      self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+      LOG.info('Joined multicast group %s on interface %s', raw_ip, bind_addr)
 
     self.logger_ip = getattr(config, 'logger_ip', None)
     self.logger_port = getattr(config, 'logger_port', None)
