@@ -6,6 +6,7 @@
 #
 
 from .base import CallSelector
+import re
 
 
 class Unsolicited(CallSelector):
@@ -13,10 +14,16 @@ class Unsolicited(CallSelector):
 
     def get(self, band):
         records = []
+        wrap_re = re.compile(r'(RR73|73)$')
         for record in super().get(band):
-            # Prioritize unsolicited opportunities over CQ calls
-            if record.get('extra') == 'UNSOLICITED':
-                # Give unsolicited calls higher priority (better SNR)
-                record['snr'] += 5  # Boost SNR by 5 dB for unsolicited calls
+            # ignore all non-unsolicited calls
+            if record.get('extra') != 'UNSOLICITED':
+                continue
+            # only when wrapping up (RR73 or 73)
+            msg = record.get('packet', {}).get('Message', '')
+            if not wrap_re.search(msg):
+                continue
+            # boost wrap-up SNR
+            record['snr'] += 5
             records.append(record)
         return self.select_record(records) 
