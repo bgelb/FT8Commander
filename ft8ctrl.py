@@ -74,12 +74,13 @@ class Sequencer:
     packet.call = data['call']
     packet.Time = data['time']
     packet.SNR = data['snr']
+    # TODO: use self.follow_frequency here to control whether or not to change the TX frequency
     packet.DeltaTime = pkt['DeltaTime']
     packet.DeltaFrequency = pkt['DeltaFrequency']
     packet.Mode = pkt['Mode']
     packet.Message = pkt['Message']
-    if self.follow_frequency:
-      packet.Modifiers = wsjtx.Modifiers.SHIFT
+    # always set the SHIFT modifier to ensure TX is enabled
+    packet.Modifiers = wsjtx.Modifiers.SHIFT
 
     LOG.debug('Transmitting %s', packet)
     try:
